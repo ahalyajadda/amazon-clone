@@ -126,7 +126,7 @@ export default function SearchScreen() {
     const filterRating = filter.rating || rating;
     const setOrder = filter.order || order;
     const filterPage = filter.page || page;
-    return `/search?category=${filterCategory}&query=${filterQuery}&price=${filterPrice}&rating=${filterRating}&order=${setOrder}&page=${filterPage}`;
+    return `/search/?category=${filterCategory}&query=${filterQuery}&price=${filterPrice}&rating=${filterRating}&order=${setOrder}&page=${filterPage}`;
   };
 
   return (
