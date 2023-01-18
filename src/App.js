@@ -1,3 +1,5 @@
+// "https://amazon-backend-ybvg.onrender.com"
+
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -33,8 +35,8 @@ import ProductEditScreen from './screens/ProductEditScreen';
 import OrderListScreen from './screens/OrderListScreen';
 import UserListScreen from './screens/UserListScreen';
 import UserEditScreen from './screens/UserEditScreen';
-import MapScreen from './screens/MapScreen';
 
+import '@fortawesome/fontawesome-free/css/all.min.css';
 function App() {
   const { state, dispatch: ctxDispatch } = useContext(Store);
   const { fullBox, cart, userInfo } = state;
@@ -52,7 +54,9 @@ function App() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await axios.get(`/api/products/categories`);
+        const { data } = await axios.get(
+          `https://amazon-clone-backend-285r.onrender.com/api/products/categories`
+        );
         setCategories(data);
       } catch (err) {
         toast.error(getError(err));
@@ -181,14 +185,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/map"
-                element={
-                  <ProtectedRoute>
-                    <MapScreen />
-                  </ProtectedRoute>
-                }
-              />
+
               <Route path="/placeorder" element={<PlaceOrderScreen />} />
               <Route
                 path="/order/:id"
