@@ -1,28 +1,30 @@
+import React, { useEffect, useReducer, useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import { useReducer } from 'react';
-import { Button, Col, Row } from 'react-bootstrap';
-import { Helmet } from 'react-helmet-async';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getError } from '../utils';
+import { Helmet } from 'react-helmet-async';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Rating from '../components/Rating';
 import LoadingBox from '../components/LoadingBox';
 import MessageBox from '../components/MessageBox';
+import Button from 'react-bootstrap/Button';
 import Product from '../components/Product';
-import Rating from '../components/Rating';
-import { getError } from '../utils';
+import LinkContainer from 'react-router-bootstrap/LinkContainer';
 
-function reducer(state, action) {
+const reducer = (state, action) => {
   switch (action.type) {
     case 'FETCH_REQUEST':
       return { ...state, loading: true };
     case 'FETCH_SUCCESS':
       return {
         ...state,
-        loading: false,
         products: action.payload.products,
         page: action.payload.page,
         pages: action.payload.pages,
         countProducts: action.payload.countProducts,
+        loading: false,
       };
     case 'FETCH_FAIL':
       return { ...state, loading: false, error: action.payload };
@@ -30,7 +32,8 @@ function reducer(state, action) {
     default:
       return state;
   }
-}
+};
+
 const prices = [
   {
     name: '$1 to $50',
@@ -45,19 +48,23 @@ const prices = [
     value: '201-1000',
   },
 ];
+
 export const ratings = [
   {
     name: '4stars & up',
     rating: 4,
   },
+
   {
     name: '3stars & up',
     rating: 3,
   },
+
   {
     name: '2stars & up',
     rating: 2,
   },
+
   {
     name: '1stars & up',
     rating: 1,
@@ -67,7 +74,7 @@ export const ratings = [
 export default function SearchScreen() {
   const navigate = useNavigate();
   const { search } = useLocation();
-  const sp = new URLSearchParams(search);
+  const sp = new URLSearchParams(search); // /search?category=Shirts
   const category = sp.get('category') || 'all';
   const query = sp.get('query') || 'all';
   const price = sp.get('price') || 'all';
@@ -80,16 +87,14 @@ export default function SearchScreen() {
       loading: true,
       error: '',
     });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const { data } = await axios.get(
-          `https://amazon-clone-backend-285r.onrender.com/api/products/search?page=${page}&query=${query}&category=${category}&price=${price}&rating=${rating}&order=${order}`
+          `/api/products/search?page=${page}&query=${query}&category=${category}&price=${price}&rating=${rating}&order=${order}`
         );
-        dispatch({
-          type: 'FETCH_SUCCESS',
-          payload: data,
-        });
+        dispatch({ type: 'FETCH_SUCCESS', payload: data });
       } catch (err) {
         dispatch({
           type: 'FETCH_FAIL',
@@ -101,17 +106,11 @@ export default function SearchScreen() {
   }, [category, error, order, page, price, query, rating]);
 
   const [categories, setCategories] = useState([]);
-  useEffect((e) => {
-    e?.preventDefault();
-  });
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await axios.get(
-          'https://amazon-clone-backend-285r.onrender.com/api/products/categories'
-        );
+        const { data } = await axios.get(`/api/products/categories`);
         setCategories(data);
-        console.log(categories);
       } catch (err) {
         toast.error(getError(err));
       }
@@ -119,16 +118,17 @@ export default function SearchScreen() {
     fetchCategories();
   }, [dispatch]);
 
-  const getFilterUrl = (filter) => {
+  const getFilterUrl = (filter, skipPathname) => {
+    const filterPage = filter.page || page;
     const filterCategory = filter.category || category;
     const filterQuery = filter.query || query;
-    const filterPrice = filter.price || price;
     const filterRating = filter.rating || rating;
-    const setOrder = filter.order || order;
-    const filterPage = filter.page || page;
-    return `/search/?category=${filterCategory}&query=${filterQuery}&price=${filterPrice}&rating=${filterRating}&order=${setOrder}&page=${filterPage}`;
+    const filterPrice = filter.price || price;
+    const sortOrder = filter.order || order;
+    return `${
+      skipPathname ? '' : '/search?'
+    }category=${filterCategory}&query=${filterQuery}&price=${filterPrice}&rating=${filterRating}&order=${sortOrder}&page=${filterPage}`;
   };
-
   return (
     <div>
       <Helmet>
@@ -140,21 +140,21 @@ export default function SearchScreen() {
           <div>
             <ul>
               <li>
-                <a
+                <Link
                   className={'all' === category ? 'text-bold' : ''}
-                  href={getFilterUrl({ category: 'all' })}
+                  to={getFilterUrl({ category: 'all' })}
                 >
                   Any
-                </a>
+                </Link>
               </li>
               {categories.map((c) => (
                 <li key={c}>
-                  <a
+                  <Link
                     className={c === category ? 'text-bold' : ''}
-                    href={getFilterUrl({ category: c })}
+                    to={getFilterUrl({ category: c })}
                   >
                     {c}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -163,21 +163,21 @@ export default function SearchScreen() {
             <h3>Price</h3>
             <ul>
               <li>
-                <a
+                <Link
                   className={'all' === price ? 'text-bold' : ''}
-                  href={getFilterUrl({ price: 'all' })}
+                  to={getFilterUrl({ price: 'all' })}
                 >
                   Any
-                </a>
+                </Link>
               </li>
               {prices.map((p) => (
                 <li key={p.value}>
-                  <a
+                  <Link
+                    to={getFilterUrl({ price: p.value })}
                     className={p.value === price ? 'text-bold' : ''}
-                    href={getFilterUrl({ price: p.value })}
                   >
                     {p.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -187,26 +187,21 @@ export default function SearchScreen() {
             <ul>
               {ratings.map((r) => (
                 <li key={r.name}>
-                  <a
-                    href={getFilterUrl({ rating: r.rating })}
-                    className={
-                      `
-                        ${r.rating}` === `${rating} `
-                        ? 'text-bold'
-                        : ''
-                    }
+                  <Link
+                    to={getFilterUrl({ rating: r.rating })}
+                    className={`${r.rating}` === `${rating}` ? 'text-bold' : ''}
                   >
-                    <Rating caption={'& up'} rating={r.rating}></Rating>
-                  </a>
+                    <Rating caption={' & up'} rating={r.rating}></Rating>
+                  </Link>
                 </li>
               ))}
               <li>
-                <a
-                  className={'all' === rating ? 'text-bold' : ''}
-                  href={getFilterUrl({ rating: 'all' })}
+                <Link
+                  to={getFilterUrl({ rating: 'all' })}
+                  className={rating === 'all' ? 'text-bold' : ''}
                 >
                   <Rating caption={' & up'} rating={0}></Rating>
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -222,10 +217,10 @@ export default function SearchScreen() {
                 <Col md={6}>
                   <div>
                     {countProducts === 0 ? 'No' : countProducts} Results
-                    {query !== 'all' && ':' + query}
-                    {category !== 'all' && ': category ' + price}
-                    {price !== 'all' && ': Price ' + price}
-                    {rating !== 'all' && ': rating ' + rating}
+                    {query !== 'all' && ' : ' + query}
+                    {category !== 'all' && ' : ' + category}
+                    {price !== 'all' && ' : Price ' + price}
+                    {rating !== 'all' && ' : Rating ' + rating + ' & up'}
                     {query !== 'all' ||
                     category !== 'all' ||
                     rating !== 'all' ||
@@ -255,8 +250,9 @@ export default function SearchScreen() {
                 </Col>
               </Row>
               {products.length === 0 && (
-                <MessageBox>No products Found</MessageBox>
+                <MessageBox>No Product Found</MessageBox>
               )}
+
               <Row>
                 {products.map((product) => (
                   <Col sm={6} lg={4} className="mb-3" key={product._id}>
@@ -264,20 +260,24 @@ export default function SearchScreen() {
                   </Col>
                 ))}
               </Row>
+
               <div>
                 {[...Array(pages).keys()].map((x) => (
-                  <a
+                  <LinkContainer
                     key={x + 1}
                     className="mx-1"
-                    href={getFilterUrl({ page: x + 1 })}
+                    to={{
+                      pathname: '/search',
+                      seacrh: getFilterUrl({ page: x + 1 }, true),
+                    }}
                   >
                     <Button
                       className={Number(page) === x + 1 ? 'text-bold' : ''}
-                      variant="Light"
+                      variant="light"
                     >
                       {x + 1}
                     </Button>
-                  </a>
+                  </LinkContainer>
                 ))}
               </div>
             </>
