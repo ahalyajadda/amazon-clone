@@ -1,21 +1,18 @@
-import Homescreen from './screens/HomeScreen';
-import {
-  Navbar,
-  Container,
-  Nav,
-  Badge,
-  NavDropdown,
-  Button,
-} from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import HomeScreen from './screens/HomeScreen';
 import ProductScreen from './screens/ProductScreen';
+import Navbar from 'react-bootstrap/Navbar';
+import Badge from 'react-bootstrap/Badge';
+import Nav from 'react-bootstrap/Nav';
+import NavDropdown from 'react-bootstrap/NavDropdown';
+import Container from 'react-bootstrap/Container';
+import { LinkContainer } from 'react-router-bootstrap';
 import { useContext, useEffect, useState } from 'react';
 import { Store } from './Store';
 import CartScreen from './screens/CartScreen';
 import SigninScreen from './screens/SigninScreen';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import ShippingAddressScreen from './screens/ShippingAddressScreen';
 import SignupScreen from './screens/SignupScreen';
 import PaymentMethodScreen from './screens/PaymentMethodScreen';
@@ -23,24 +20,24 @@ import PlaceOrderScreen from './screens/PlaceOrderScreen';
 import OrderScreen from './screens/OrderScreen';
 import OrderHistoryScreen from './screens/OrderHistoryScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import Button from 'react-bootstrap/Button';
 import { getError } from './utils';
 import axios from 'axios';
 import SearchBox from './components/SearchBox';
 import SearchScreen from './screens/SearchScreen';
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminRoute from './components/AdminRoute';
-
 import DashboardScreen from './screens/DashboardScreen';
+import AdminRoute from './components/AdminRoute';
 import ProductListScreen from './screens/ProductListScreen';
 import ProductEditScreen from './screens/ProductEditScreen';
 import OrderListScreen from './screens/OrderListScreen';
 import UserListScreen from './screens/UserListScreen';
 import UserEditScreen from './screens/UserEditScreen';
+import MapScreen from './screens/MapScreen';
 
-import '@fortawesome/fontawesome-free/css/all.min.css';
 function App() {
   const { state, dispatch: ctxDispatch } = useContext(Store);
-  const { cart, userInfo } = state;
+  const { fullBox, cart, userInfo } = state;
 
   const signoutHandler = () => {
     ctxDispatch({ type: 'USER_SIGNOUT' });
@@ -55,25 +52,25 @@ function App() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await axios.get(
-          'https://amazon-clone-backend-285r.onrender.com/api/products/categories'
-        );
+        const { data } = await axios.get(`/api/products/categories`);
         setCategories(data);
-        console.log(categories);
       } catch (err) {
         toast.error(getError(err));
       }
     };
     fetchCategories();
   }, []);
-
   return (
     <BrowserRouter>
       <div
         className={
           sidebarIsOpen
-            ? 'd-flex flex-column site-container active-cont'
-            : 'd-flex flex-column site-container'
+            ? fullBox
+              ? 'site-container active-cont d-flex flex-column full-box'
+              : 'site-container active-cont d-flex flex-column'
+            : fullBox
+            ? 'site-container d-flex flex-column full-box'
+            : 'site-container d-flex flex-column'
         }
       >
         <ToastContainer position="bottom-center" limit={1} />
@@ -86,15 +83,16 @@ function App() {
               >
                 <i className="fas fa-bars"></i>
               </Button>
+
               <LinkContainer to="/">
-                <Navbar.Brand>amazon</Navbar.Brand>
+                <Navbar.Brand>amazona</Navbar.Brand>
               </LinkContainer>
               <Navbar.Toggle aria-controls="basic-navbar-nav" />
               <Navbar.Collapse id="basic-navbar-nav">
                 <SearchBox />
-                <Nav className="me-auto w-100 justify-content-end">
+                <Nav className="me-auto  w-100  justify-content-end">
                   <Link to="/cart" className="nav-link">
-                    cart
+                    Cart
                     {cart.cartItems.length > 0 && (
                       <Badge pill bg="danger">
                         {cart.cartItems.reduce((a, c) => a + c.quantity, 0)}
@@ -112,7 +110,7 @@ function App() {
                       <NavDropdown.Divider />
                       <Link
                         className="dropdown-item"
-                        to="/signout"
+                        to="#signout"
                         onClick={signoutHandler}
                       >
                         Sign Out
@@ -157,12 +155,12 @@ function App() {
             </Nav.Item>
             {categories.map((category) => (
               <Nav.Item key={category}>
-                <a
-                  href={`/search?category=${category}`}
+                <LinkContainer
+                  to={{ pathname: '/search', search: `category=${category}` }}
                   onClick={() => setSidebarIsOpen(false)}
                 >
-                  {category}
-                </a>
+                  <Nav.Link>{category}</Nav.Link>
+                </LinkContainer>
               </Nav.Item>
             ))}
           </Nav>
@@ -171,37 +169,10 @@ function App() {
           <Container className="mt-3">
             <Routes>
               <Route path="/product/:slug" element={<ProductScreen />} />
-              <Route path="/" element={<Homescreen />} />
               <Route path="/cart" element={<CartScreen />} />
+              <Route path="/search" element={<SearchScreen />} />
               <Route path="/signin" element={<SigninScreen />} />
               <Route path="/signup" element={<SignupScreen />} />
-              <Route
-                path="/shipping"
-                element={
-                  <ProtectedRoute>
-                    <ShippingAddressScreen />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/search" element={<SearchScreen />} />
-
-              <Route path="/payment" element={<PaymentMethodScreen />} />
-              <Route
-                path="/placeorder"
-                element={
-                  <ProtectedRoute>
-                    <PlaceOrderScreen />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orderhistory"
-                element={
-                  <ProtectedRoute>
-                    <OrderHistoryScreen />
-                  </ProtectedRoute>
-                }
-              />
               <Route
                 path="/profile"
                 element={
@@ -210,7 +181,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
+              <Route
+                path="/map"
+                element={
+                  <ProtectedRoute>
+                    <MapScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/placeorder" element={<PlaceOrderScreen />} />
               <Route
                 path="/order/:id"
                 element={
@@ -218,7 +197,21 @@ function App() {
                     <OrderScreen />
                   </ProtectedRoute>
                 }
-              />
+              ></Route>
+              <Route
+                path="/orderhistory"
+                element={
+                  <ProtectedRoute>
+                    <OrderHistoryScreen />
+                  </ProtectedRoute>
+                }
+              ></Route>
+              <Route
+                path="/shipping"
+                element={<ShippingAddressScreen />}
+              ></Route>
+              <Route path="/payment" element={<PaymentMethodScreen />}></Route>
+              {/* Admin Routes */}
               <Route
                 path="/admin/dashboard"
                 element={
@@ -226,7 +219,7 @@ function App() {
                     <DashboardScreen />
                   </AdminRoute>
                 }
-              />
+              ></Route>
               <Route
                 path="/admin/orders"
                 element={
@@ -240,14 +233,6 @@ function App() {
                 element={
                   <AdminRoute>
                     <UserListScreen />
-                  </AdminRoute>
-                }
-              ></Route>
-              <Route
-                path="/admin/user/:id"
-                element={
-                  <AdminRoute>
-                    <UserEditScreen />
                   </AdminRoute>
                 }
               ></Route>
@@ -267,6 +252,16 @@ function App() {
                   </AdminRoute>
                 }
               ></Route>
+              <Route
+                path="/admin/user/:id"
+                element={
+                  <AdminRoute>
+                    <UserEditScreen />
+                  </AdminRoute>
+                }
+              ></Route>
+
+              <Route path="/" element={<HomeScreen />} />
             </Routes>
           </Container>
         </main>
@@ -279,5 +274,3 @@ function App() {
 }
 
 export default App;
-
-// "https://amazon-backend-ybvg.onrender.com"
